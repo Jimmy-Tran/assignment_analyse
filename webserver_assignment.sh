@@ -61,7 +61,15 @@ function setup() {
 
     # TODO check if required folders and files exists before installations
     # For example: the folder ./apps/ and the file "dev.conf"
-
+    function directoryExists()
+    {
+          if [ -d ./apps ]; then
+            echo "directory exists"
+          else
+            mkdir -p ./apps
+          fi
+    }
+    directoryExists
 }
 
 # Function to install a package from a URL
