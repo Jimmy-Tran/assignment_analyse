@@ -22,7 +22,7 @@ function setup() {
     # print the outcome for each checking step
     
     # TODO installation from online package requires values for
-    # package_name package_url install_dir
+    # package_name package_url install_dir3
 
     # TODO check if required dependency is not already installed otherwise install it
     # if a a problem occur during the this process 
@@ -32,6 +32,7 @@ function setup() {
       if ! which wget >/dev/null; then
           echo "wget is not installed, installing..."
           brew install wget
+          handle_error "not able to install"
 #          sudo apt-get wget
       else
           echo "wget is installed"
