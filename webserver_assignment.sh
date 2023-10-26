@@ -16,7 +16,7 @@ function handle_error() {
 # Function to solve dependencies
 function setup() {
     # Do not remove next line!
-    echo "function setup"
+    echo "function setup $1"
 
     # TODO check if nessassary dependecies and folder structure exists and 
     # print the outcome for each checking step
@@ -27,6 +27,36 @@ function setup() {
     # TODO check if required dependency is not already installed otherwise install it
     # if a a problem occur during the this process 
     # use the function handle_error() to print a messgage and handle the error
+    function check_dependency() {
+      echo "checking dependecies dir/ $1"
+      if ! which wget >/dev/null; then
+          echo "wget is not installed, installing..."
+          brew install wget
+#          sudo apt-get wget
+      else
+          echo "wget is installed"
+      fi
+
+      # Check for curl
+      if ! which curl >/dev/null; then
+          echo "curl is not installed, installing..."
+
+          brew install curl
+#          sudo apt-get curl
+      else
+          echo "curl is installed"
+      fi
+
+      # Check for unzip
+      if ! which unzip >/dev/null; then
+          echo "unzip is not installed, installing..."
+          brew install unzip
+#          sudo apt-get unzip
+      else
+          echo "unzip is installed"
+      fi
+    }
+    check_dependency "$1"
 
     # TODO check if required folders and files exists before installations
     # For example: the folder ./apps/ and the file "dev.conf"
@@ -125,18 +155,18 @@ function main() {
 
     # TODO
     source dev.conf
-    echo "$WEBSERVER_IP"
-    echo "$WEBSERVER_PORT"
-    echo "$APP1_URL"
-    echo "$APP2_URL"
-    echo "$INSTALL_DIR"
+#    echo "$WEBSERVER_IP"
+#    echo "$WEBSERVER_PORT"
+#    echo "$APP1_URL"
+#    echo "$APP2_URL"
+#    echo "$INSTALL_DIR"
 
 
     # Get arguments from the commandline
     if [[ $1 = setup || $1 = nosecrets || $1 = pywebserver || $1 = remove ]]; then
       echo "valid argument $argument"
       if [[ $1 = setup ]]; then
-        setup
+        setup "$INSTALL_DIR"
         fi
     else
       exit 1
