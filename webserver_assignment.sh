@@ -11,8 +11,20 @@ declare -a packages=("https://github.com/nickjj/webserver.git" "https://github.c
 function handle_error() {
     # Do not remove next line!
     echo "function handle_error"
-}
+
+    local error_message="$1"
+    local command="$2"
+
+    #print error message
+    echo "$error_message"
+
+    #command execute
+    if [ -n "$command" ]; then
+        echo "Executing command: $command"
+        eval "$command"
+    fi
  
+} 
 # Function to solve dependencies
 function setup() {
     # Do not remove next line!
@@ -79,6 +91,27 @@ function install_package() {
     # Do not remove next line!
     echo "function install_package"
 
+    local package_name="$1"
+    local package_url="$2"
+    local install_dir3="$3"
+
+    #check the application-folder and the url
+    if [ ! -d "$install_dir3" ] && [ -n "$package_url" ]; then
+        # specific installation-folder for the current package
+        mkdir -p "$install_dir3"
+
+        #download and unzipp the package
+        if wget -q "package_url" -O "$install_dir3/package.zip" && unzip -q "$install_dir3/package.zip" -d "$install_dir3"; then
+            echo "Package $package_name installed successfully"
+        else
+            # error handle
+            handle_error "Error: Failed to download or unzip $package_name." "rollback_command"
+        fi
+    else
+        handle_error "folder already exists or url is missing"
+    fi
+    
+    echo "name: $package_name url: $package_url install dir: $install_dir3"
     # TODO The logic for downloading from a URL and unizpping the downloaded files of different applications must be generic
 
     # TODO Specific actions that need to be taken for a specific application during this process should be handeld in a separate if-else
@@ -102,7 +135,6 @@ function install_package() {
     # make sure the user is allowed to remove this folder during uninstall
 
 }
-
 function rollback_nosecrets() {
     # Do not remove next line!
     echo "function rollback_nosecrets"
