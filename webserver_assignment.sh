@@ -93,7 +93,7 @@ function install_package() {
 
     local package_name="$1"
     local package_url="$2"
-    local install_dir3="$3"
+    local install_dir3="./apps/$1"
 
     #check the application-folder and the url
     if [ ! -d "$install_dir3" ] && [ -n "$package_url" ]; then
@@ -101,7 +101,7 @@ function install_package() {
         mkdir -p "$install_dir3"
 
         #download and unzipp the package
-        if wget -q "package_url" -O "$install_dir3/package.zip" && unzip -q "$install_dir3/package.zip" -d "$install_dir3"; then
+        if wget -q "$package_url" -O "$install_dir3/package.zip" && unzip -q "$install_dir3/package.zip" -d "$install_dir3"; then
             echo "Package $package_name installed successfully"
         else
             # error handle
@@ -135,6 +135,7 @@ function install_package() {
     # make sure the user is allowed to remove this folder during uninstall
 
 }
+
 function rollback_nosecrets() {
     # Do not remove next line!
     echo "function rollback_nosecrets"
@@ -202,22 +203,61 @@ function main() {
 #    echo "$APP2_URL"
 #    echo "$INSTALL_DIR"
 
+    arg1="$1"
+    arg2="$2"
 
-    # Get arguments from the commandline
-    if [[ $1 = setup || $1 = nosecrets || $1 = pywebserver || $1 = remove ]]; then
-      echo "valid argument $argument"
-      if [[ $1 = setup ]]; then
-        setup "$INSTALL_DIR"
-        fi
-    else
-      exit 1
-    fi
+    case "$arg1" in 
+        "setup")
+            setup "$INSTALL_DIR"
+            ;;
+        
+        "remove")
+            remove
+            ;;
+        
+        "nosecrets")
+            case "$arg2" in
+                "--install")
+                    install_package "$arg1" "$APP1_URL"
+                    ;;
+                "--uninstall")
+                    uninstall_nosecrets
+                    ;;
+                "--test")
+                    test_nosecrets
+                    ;;
+                *)
+                    handle_error "Invalid second argument: $arg2"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        
+        "pywebserver")
+            case "$arg2" in
+                "--install")
+                    install_package "$arg1" "$APP2_URL"
+                    ;;
+                "--uninstall")
+                    uninstall_pywebserver
+                    ;;
+                "--test")
+                    test_pywebserver
+                    ;;
+                *)
+                    handle_error "Invalid second argument: $arg2"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        *)
+            handle_error "Invalid first argument: $arg1"
+            exit 1
+            ;;
+    esac
 
-    if [[ $2 = --install || $2 = --uninstall || $1 = --test ]]; then
-      echo "valid argument $argument"
-    else
-      exit 1
-    fi
+
+    
     # Check if the first argument is valid
     # allowed values are "setup" "nosecrets" "pywebserver" "remove"
     # bash must exit if value does not match one of those values
@@ -232,6 +272,5 @@ function main() {
     # expected arguments are the installation directory specified in dev.conf
 
 }
-
 # Pass commandline arguments to function main
 main "$@"
