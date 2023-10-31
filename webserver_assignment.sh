@@ -43,9 +43,9 @@ function setup() {
       echo "checking dependecies dir/ $1"
       if ! which wget >/dev/null; then
           echo "wget is not installed, installing..."
-          brew install wget
-          handle_error "not able to install"
-#          sudo apt-get wget
+        #   brew install wget
+          sudo apt-get install wget
+          
       else
           echo "wget is installed"
       fi
@@ -54,8 +54,8 @@ function setup() {
       if ! which curl >/dev/null; then
           echo "curl is not installed, installing..."
 
-          brew install curl
-#          sudo apt-get curl
+        # brew install curl
+          sudo apt-get install curl
       else
           echo "curl is installed"
       fi
@@ -63,8 +63,8 @@ function setup() {
       # Check for unzip
       if ! which unzip >/dev/null; then
           echo "unzip is not installed, installing..."
-          brew install unzip
-#          sudo apt-get unzip
+        #   brew install unzip
+          sudo apt-get install unzip
       else
           echo "unzip is installed"
       fi
@@ -113,15 +113,16 @@ function install_package() {
                 # Perform package-specific actions
                 case "$package_name" in
                     "nosecrets")
+                        echo "$package_name, $package_url, $install_dir"
                         cd $install_dir/no-more-secrets-master
-                        make nms
-                        sudo make install
+                        make nms || { handle_error "Failed to make nms"; rollback_nosecrets "$install_dir"; return 1; }
+                        sudo make install || { handle_error "Failed to install nms"; rollback_nosecrets "$install_dir"; return 1; }
                         ;;
                     "pywebserver")
                         # Add any specific actions for the 'webserver' package here
                         cd $install_dir/webserver-master
-                        sudo mv webserver /usr/local/bin/webserver
-                        sudo chmod +x /usr/local/bin/webserver
+                        sudo mv webserver /usr/local/bin/webserver || { handle_error "Failed to move webserver"; rollback_pywebserver "$install_dir"; return 1; }
+                        sudo chmod +x /usr/local/bin/webserver || { handle_error "Failed to make webserver executable"; rollback_pywebserver "$install_dir"; return 1; }
                         ;;
                     *)
                         handle_error "Unknown package: $package_name"
@@ -140,14 +141,34 @@ function rollback_nosecrets() {
     # Do not remove next line!
     echo "function rollback_nosecrets"
 
+    local install_dir="$1"
+
+    # remove installed files and directories
+    if [ -d "$install_dir" ]; then
+        sudo rm -rf "$install_dir"
+        sudo rm -rf /usr/local/bin/nms
+    fi
+
     # TODO rollback intermiediate steps when installation fails
+
+    echo "rollback for pyserver completed"
 }
 
 function rollback_pywebserver() {
     # Do not remove next line!
     echo "function rollback_pywebserver"
 
+    local install_dir="$1"
+
+    # remove installed files and directories
+    if [ -d "$install_dir" ]; then
+        sudo rm -rf "$install_dir"
+        sudo rm -rf /usr/local/bin/webserver
+    fi
+
     # TODO rollback intermiediate steps when installation fails
+
+    echo "rollback for pywebserver completed"
 }
 
 function test_nosecrets() {
@@ -155,7 +176,7 @@ function test_nosecrets() {
     echo "function test_nosecrets"
 
     # TODO test nosecrets
-     ls -l | nms
+    ls -l | nms
     pkill -f nms
 }
 
@@ -213,9 +234,9 @@ function remove() {
     sudo rm -rf ./apps
 
     # mac uninstall
-        brew uninstall curl wget unzip
+        #brew uninstall curl wget unzip
     # Remove each package that was installed during setup
-#    sudo apt purge curl wget unzip
+    sudo apt purge curl wget unzip
 }
 
 function main() {
