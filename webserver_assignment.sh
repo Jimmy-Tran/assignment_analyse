@@ -87,54 +87,54 @@ function setup() {
 # Function to install a package from a URL
 # TODO assign the required parameter needed for the logic
 # complete the implementation of the following function.
+
 function install_package() {
     # Do not remove next line!
     echo "function install_package"
 
     local package_name="$1"
     local package_url="$2"
-    local install_dir3="./apps/$1"
+    local install_dir="./apps/$package_name"
 
-    #check the application-folder and the url
-    if [ ! -d "$install_dir3" ] && [ -n "$package_url" ]; then
-        # specific installation-folder for the current package
-        mkdir -p "$install_dir3"
-
-        #download and unzipp the package
-        if wget -q "$package_url" -O "$install_dir3/package.zip" && unzip -q "$install_dir3/package.zip" -d "$install_dir3"; then
-            echo "Package $package_name installed successfully"
-        else
-            # error handle
-            handle_error "Error: Failed to download or unzip $package_name." "rollback_command"
-        fi
+    if [ -z "$package_name" ] || [ -z "$package_url" ]; then
+        handle_error "Package name or URL is missing"
     else
-        handle_error "folder already exists or url is missing"
+        # Check if the installation directory already exists
+        if [ -d "$install_dir" ]; then
+            handle_error "Package $package_name is already installed"
+        else
+            # Create the installation directory
+            mkdir -p "$install_dir"
+
+            # Download and unzip the package
+            if wget -q "$package_url" -O "$install_dir/package.zip" && unzip -q "$install_dir/package.zip" -d "$install_dir"; then
+                echo "Package $package_name installed successfully"
+
+                # Perform package-specific actions
+                case "$package_name" in
+                    "nosecrets")
+                        cd $install_dir/no-more-secrets-master
+                        make nms
+                        sudo make install
+                        ;;
+                    "pywebserver")
+                        # Add any specific actions for the 'webserver' package here
+                        cd $install_dir/webserver-master
+                        sudo mv webserver /usr/local/bin/webserver
+                        sudo chmod +x /usr/local/bin/webserver
+                        ;;
+                    *)
+                        handle_error "Unknown package: $package_name"
+                        ;;
+                esac
+            else
+                handle_error "Error: Failed to download or unzip $package_name"
+            fi
+        fi
     fi
-    
-    echo "name: $package_name url: $package_url install dir: $install_dir3"
-    # TODO The logic for downloading from a URL and unizpping the downloaded files of different applications must be generic
+    }
 
-    # TODO Specific actions that need to be taken for a specific application during this process should be handeld in a separate if-else
 
-    # TODO Every intermediate steps need to be handeld carefully. error handeling should be dealt with using handle_error() and/or rolleback()
-
-    # TODO If a file is downloaded but cannot be zipped a rollback is needed to be able to start from scratch
-    # for example: package names and urls that are needed are passed or extracted from the config file
-
-    # TODO check if the application-folder and the url of the dependency exist
-    # TODO create a specific installation folder for the current package
-
-    # TODO Download and unzip the package
-    # if a a problem occur during the this proces use the function handle_error() to print a messgage and handle the error
-
-    # TODO extract the package to the installation folder and store it into a dedicated folder
-    # If a problem occur during the this proces use the function handle_error() to print a messgage and handle the error
-
-    # TODO this section can be used to implement application specifc logic
-    # nosecrets might have additional commands that needs to be executed
-    # make sure the user is allowed to remove this folder during uninstall
-
-}
 
 function rollback_nosecrets() {
     # Do not remove next line!
@@ -155,8 +155,9 @@ function test_nosecrets() {
     echo "function test_nosecrets"
 
     # TODO test nosecrets
+     ls -l | nms
     # kill this webserver process after it has finished its job
-
+    pkill -f nms
 }
 
 function test_pywebserver() {
@@ -165,28 +166,55 @@ function test_pywebserver() {
 
     # TODO test the webserver
     # server and port number must be extracted from config.conf
-    # test data must be read from test.json  
-    # kill this webserver process after it has finished its job
+    # test data must be read from test.json
+    source dev.conf
+    webserver &
+
+    # Store the PID of the last background process (webserver) in a variable
+    PID=$!
+
+  # Debugging: Print the values to verify the correct IP and port
+  echo "WEBSERVER_IP: $WEBSERVER_IP"
+  echo "WEBSERVER_PORT: $WEBSERVER_PORT"
+
+  # Check if the server is up and running before sending the request
+  while ! nc -z $WEBSERVER_IP $WEBSERVER_PORT; do
+      echo "Waiting for the server to start..."
+      sleep 1
+  done
+
+  echo "Server is now running. Sending request..."
+
+  # Send POST request using curl to the running webserver
+  curl $WEBSERVER_IP:$WEBSERVER_PORT/ -H "Content-Type: application/json" -X POST --data @test.json > /dev/null 2>&1
+  # Redirect output to /dev/null to prevent it from being displayed in the terminal
+
+  # Kill the webserver process after it finishes its job
+  kill $PID
 
 }
 
 function uninstall_nosecrets() {
     # Do not remove next line!
-    echo "function uninstall_nosecrets"  
-
-    #TODO uninstall nosecrets application
+    echo "function uninstall_nosecrets"
+    sudo rm -rf ./apps/nosecrets
+    sudo rm -rf /usr/local/bin/nms
 }
 
 function uninstall_pywebserver() {
-    echo "function uninstall_pywebserver"    
-    #TODO uninstall pywebserver application
+    echo "function uninstall_pywebserver"
+    sudo rm -rf ./apps/pywebserver
+    sudo rm -rf /usr/local/bin/webserver
 }
 
 #TODO removing installed dependency during setup() and restoring the folder structure to original state
 function remove() {
     # Do not remove next line!
     echo "function remove"
+    sudo rm -rf ./apps
 
+    # mac uninstall
+        brew uninstall curl wget unzip
     # Remove each package that was installed during setup
 
 }
