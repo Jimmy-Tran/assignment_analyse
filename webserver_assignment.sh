@@ -156,13 +156,12 @@ function test_nosecrets() {
 
     # TODO test nosecrets
      ls -l | nms
-    # kill this webserver process after it has finished its job
     pkill -f nms
 }
 
 function test_pywebserver() {
     # Do not remove next line!
-    echo "function test_pywebserver"    
+    echo "function test_pywebserver"
 
     # TODO test the webserver
     # server and port number must be extracted from config.conf
@@ -216,7 +215,7 @@ function remove() {
     # mac uninstall
         brew uninstall curl wget unzip
     # Remove each package that was installed during setup
-
+#    sudo apt purge curl wget unzip
 }
 
 function main() {
