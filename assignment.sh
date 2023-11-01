@@ -29,49 +29,59 @@ function handle_error() {
 function setup() {
     # Do not remove next line!
     echo "function setup $1"
-    
+
+    # TODO check if nessassary dependecies and folder structure exists and
+    # print the outcome for each checking step
+
     # TODO installation from online package requires values for
     # package_name package_url install_dir3
 
     # TODO check if required dependency is not already installed otherwise install it
-    # if a a problem occur during the this process 
+    # if a a problem occur during the this process
     # use the function handle_error() to print a messgage and handle the error
-
-    # TODO check if nessassary dependecies and folder structure exists and
-    # print the outcome for each checking step
-    sudo apt-get update
-    packages=("curl" "unzip" "wget")
-    for dependency in "${packages[@]}"; do
-        if ! command -v "$dependency" >/dev/null 2>&1; then
-            echo "$dependency missing, installing.."
-
-            if ! sudo apt-get install -y "$dependency"; then #install dependency -y is for auto yes
-                handle_error "Failed to install $dependency"
-            fi
-
-            echo "$dependency installed dependencies"
-        else
-            echo "$dependency is installed"
-        fi
-    done
-    echo ""
-    echo "Checking files & directories"
-    echo ""
-      if [ -d ./apps ]; then
-          echo "directory exists"
+    function check_dependency() {
+      echo "checking dependecies dir/ $1"
+      if ! which wget >/dev/null; then
+          echo "wget is not installed, installing..."
+          brew install wget
+          handle_error "not able to install"
+#          sudo apt-get wget
       else
-          mkdir -p ./apps
+          echo "wget is installed"
       fi
 
-    if [ -f dev.conf ]; then
-        echo "dev.conf exists"
+      # Check for curl
+      if ! which curl >/dev/null; then
+          echo "curl is not installed, installing..."
+
+          brew install curl
+#          sudo apt-get curl
       else
-        echo "creating dev.conf"
-        touch dev.conf
-    fi
+          echo "curl is installed"
+      fi
+
+      # Check for unzip
+      if ! which unzip >/dev/null; then
+          echo "unzip is not installed, installing..."
+          brew install unzip
+#          sudo apt-get unzip
+      else
+          echo "unzip is installed"
+      fi
+    }
+    check_dependency "$1"
 
     # TODO check if required folders and files exists before installations
     # For example: the folder ./apps/ and the file "dev.conf"
+    function directoryExists()
+    {
+          if [ -d ./apps ]; then
+            echo "directory exists"
+          else
+            mkdir -p ./apps
+          fi
+    }
+    directoryExists
 }
 
 # Function to install a package from a URL
@@ -198,27 +208,14 @@ function uninstall_pywebserver() {
 
 #TODO removing installed dependency during setup() and restoring the folder structure to original state
 function remove() {
-      if [ -d ./apps ]; then
-            sudo rm -rf ./apps
-        else
-            echo "no /apps directory found to delete."
-        fi
-    packages=("curl" "unzip" "wget")
-    for dependency in "${packages[@]}"; do
-        if command -v "$dependency" >/dev/null 2>&1; then
-            echo "$dependency isn't found"
-
-            if sudo apt purge -y "$dependency"; then #uninstall dependency -y is for auto yes
-                handle_error "Failed to remove $dependency"
-            fi
-
-            echo "$dependency uninstalled dependencies"
-        else
-            echo "$dependency isnt installed"
-        fi
-    done
     # Do not remove next line!
     echo "function remove"
+    sudo rm -rf ./apps
+
+    # mac uninstall
+        brew uninstall curl wget unzip
+    # Remove each package that was installed during setup
+#    sudo apt purge curl wget unzip
 }
 
 function main() {
