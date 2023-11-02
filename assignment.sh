@@ -217,7 +217,7 @@ function rollback_nosecrets() {
     # Do not remove next line!
     echo "function rollback_nosecrets"
 
-    local install_dir="$1/nosecrets"
+    local install_dir="./apps/pywebserver"
 
     echo ""
     echo "Removing directory"
@@ -246,7 +246,7 @@ function rollback_pywebserver() {
     # Do not remove next line!
     echo "function rollback_pywebserver"
 
-    local install_dir="$1/pywebserver"
+    local install_dir="./apps/pywebserver"
 
     echo ""
     echo "Removing"
@@ -364,7 +364,7 @@ function uninstall_pywebserver() {
         # You can also inspect the error.log for debugging: cat error.log
     fi
         if [ -d "./apps/pywebserver" ]; then
-            if ! sudo rm -rf ./pywebserver; then
+            if ! rm -rf ./pywebserver; then
                 handle_error "Error: Failed to remove pywebserver folder"
             fi
         else
