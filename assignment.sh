@@ -407,7 +407,7 @@ function uninstall_pywebserver() {
         if [ -d "./apps/pywebserver" ]; then
 
           # Remove the directory and its contents
-            if ! rm -rf ./pywebserver; then
+            if ! sudo rm -rf ./pywebserver; then
               # If failed handle_error will be called
                 handle_error "Error: Failed to remove pywebserver folder"
             fi
